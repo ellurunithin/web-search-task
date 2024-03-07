@@ -8,8 +8,8 @@ class WebCrawler:
         self.index = defaultdict(list)
         self.visited = set()
 
-    def crawl(self, url, base_url=None):
-        if url in self.visited:
+    def crawl(self, url, base_url=None,depth=0, max_depth=0):
+        if url in self.visited or depth > max_depth:
             return
         self.visited.add(url)
 
@@ -21,15 +21,16 @@ class WebCrawler:
             for link in soup.find_all('a'):
                 href = link.get('href')
                 if href:
-                    if urlparse(href).netloc:
+                    if urlparse(href).netloc and urlparse(href).netloc == urlparse(url).netloc:
                         href = urljoin(base_url or url, href)
                         #  BUG FOUND IN THE NEXT LINE
                     # if not href.startswith(base_url or url):
                         # In this line, NOT keyword is removed and updated with correct code.
                     if href.startswith(base_url or url):
-                        self.crawl(href, base_url=base_url or url)
+                        self.crawl(href, base_url=base_url or url, depth=depth+1, max_depth=max_depth)
         except Exception as e:
             print(f"Error crawling {url}: {e}")
+
 
     def search(self, keyword):
         results = []
