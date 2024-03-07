@@ -8,8 +8,8 @@ class WebCrawler:
         self.index = defaultdict(list)
         self.visited = set()
 
-    def crawl(self, url, base_url=None,depth=0, max_depth=0):
-        if url in self.visited or depth > max_depth:
+    def crawl(self, url, base_url=None):
+        if url in self.visited:
             return
         self.visited.add(url)
 
@@ -27,7 +27,7 @@ class WebCrawler:
                     # if not href.startswith(base_url or url):
                         # In this line, NOT keyword is removed and updated with correct code.
                     if href.startswith(base_url or url):
-                        self.crawl(href, base_url=base_url or url, depth=depth+1, max_depth=max_depth)
+                        self.crawl(href, base_url=base_url or url)
         except Exception as e:
             print(f"Error crawling {url}: {e}")
 
@@ -53,11 +53,12 @@ class WebCrawler:
 
 def main():
     crawler = WebCrawler()
-    start_url = "https://example.com"
+    start_url = "https://www.msit.ac.in"
     #  THE BUG IS FOUND HERE
     # crawler.craw(start_url)  This line contains bug. The name of the function is typed wrong.
     crawler.crawl(start_url)     # the bug is fixed. 
 
-    keyword = "test"
+    keyword = "murthy"
     results = crawler.search(keyword)
     crawler.print_results(results)
+main()
