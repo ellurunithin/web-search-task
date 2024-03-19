@@ -3,11 +3,24 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 import re
 import os
-import nltk  # Importing nltk for natural language processing
-from nltk.corpus import stopwords  # Importing stopwords from NLTK
 
-nltk.download('stopwords')  # Downloading NLTK stopwords
-stop_words = set(stopwords.words('english'))  # Creating set of English stopwords
+
+class RankingAlgorithm:
+    def __init__(self, index, stop_words):
+        self.index = index
+        self.stop_words = stop_words
+
+
+    def rank_pages(self, query):
+        # Remove stopwords from the query
+        query_words = [word for word in query.lower().split() if word not in self.stop_words]
+        
+        relevant_pages = set()
+        for query_word in query_words:
+            relevant_pages.update(self.index.get(query_word, []))
+        
+        scores = {page: sum(page.lower().count(word) for word in query_words) for page in relevant_pages}
+        return scores
 
 class Indexer:
     def __init__(self):
@@ -70,4 +83,5 @@ class Crawler:
             print(f"Failed to crawl {url}: {e}")
         # Return an empty list if crawling fails or if the URL format is unsupported
         return []
+
 
