@@ -5,10 +5,10 @@ from Crawler import Crawler, Indexer, RankingAlgorithm
 
 def main():
     # Get seed URL from user
-    seed_url = input("Enter the seed URL: ")
+    seed_url = "https://www.msit.ac.in"
 
     # Get query from user
-    query = input("Enter the query: ")
+    query = "murthy"
 
     # Download NLTK stop words data
     nltk.download('stopwords')
