@@ -1,58 +1,52 @@
 from flask import Flask, request, jsonify
+import requests
+import nltk
+from nltk.corpus import stopwords
 from Crawler import Crawler, Indexer, RankingAlgorithm
 
 app = Flask(__name__)
 
+# Download NLTK stop words data
+nltk.download('stopwords')
+
+# Define stop words list using NLTK
+stop_words = set(stopwords.words('english'))
+
 # Initialize objects
 crawler = Crawler()
-indexer = Indexer(stop_words=[])  # Add your stop words here
+indexer = Indexer(stop_words)  # Pass stop words list to the Indexer constructor
 ranking_algorithm = RankingAlgorithm(indexer.index)
+welcome_message = "Welcome to the Crawl and Rank API!"
 
-@app.route('/')
-def index():
-    return 'Welcome to the Web Search API!'
+@app.route('/',methods=['GET'])
+def welcome():
+    print(welcome_message)  # Print welcome message in the terminal
+    return welcome_message
 
-@app.route('/search', methods=['GET'])
+@app.route('/search', methods=['GET','POST'])
 def search():
-    url = request.args.get('url')
-    keyword = request.args.get('keyword')
+    
+    if request.method == 'GET':
+        print("Received a request!")  # Print message indicating a request has been received
+        # Hardcoded seed_url and query
+        seed_url = "https://www.msit.ac.in/"
+        query = "murthy"
 
-    # Perform crawling on the specified URL
-    results = crawler.crawl(url)
-
-    # Search for the keyword in the crawled content
-
-    return jsonify({"results": results})
-
-@app.route('/crawl', methods=['POST'])
-def crawl():
-    data = request.json
-    start_url = data.get('start_url')
-    if not start_url:
-        return jsonify({"error": "Start URL is required"}), 400
-    links = crawler.crawl(start_url)
-    return jsonify({"links": links})
-
-@app.route('/index', methods=['POST'])
-def index_page():
-    data = request.json
-    url = data.get('url')
-    text = data.get('text')
-    if not url or not text:
-        return jsonify({'error': 'URL and text are required'}), 400
-    indexer.index_page(url, text)
-    return jsonify({'message': 'Page indexed successfully'})
-
-@app.route('/rank', methods=['POST'])
-def rank_pages():
-    data = request.json
-    query = data.get('query')
-    if not query:
-        return jsonify({'error': 'Query is required'}), 400
-    scores = ranking_algorithm.rank_pages(query)
-    sorted_scores = dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
-    return jsonify({'scores': sorted_scores})
+        # Crawling and indexing
+        links = crawler.crawl(seed_url)
+        for link in links:
+            if link is not None and link.startswith('http'):
+                response = requests.get(link)
+                if response.status_code == 200:
+                    indexer.index_page(link, response.text)
+        # Ranking
+        page_scores = ranking_algorithm.rank_pages(query)
+        for page, score in page_scores.items():
+            print(f"{page}")
+        return jsonify(page_scores)
+    else:
+        print("Method not allowed!")  # Print message indicating the method is not allowed
+        return jsonify({"error": "Method not allowed"}), 405
 
 if __name__ == '__main__':
-    # app.run(debug=True)
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True)
