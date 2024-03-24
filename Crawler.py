@@ -11,7 +11,7 @@ class Crawler:
     def crawl(self, url):
         if url in self.visited_urls:
             return []
-
+        
         self.visited_urls.add(url)
         try:
             if url.startswith('http') or url.startswith('https'):
